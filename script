@@ -1,0 +1,73 @@
+// TADY JE OPRAVENÝ KÓD
+let questions = [];
+let currentIndex = 0;
+
+fetch('questions.json')
+    .then(res => res.json())
+    .then(data => {
+        // Vyčistíme data při načtení, aby tam nebyly zbytky z chybných exportů
+        questions = data;
+        render();
+    })
+    .catch(err => alert("Chyba při načítání questions.json: " + err));
+
+function render() {
+    if (!questions[currentIndex]) return;
+    
+    const q = questions[currentIndex];
+    document.getElementById('progress').innerText = `Otázka ${currentIndex + 1} / ${questions.length} (ID v PDF: ${q.id})`;
+    document.getElementById('questionText').innerText = q.question;
+    
+    const container = document.getElementById('answerOptions');
+    container.innerHTML = '';
+    
+    // Důležité: používáme index přímo z pole answers
+    q.answers.forEach((text, i) => {
+        const b = document.createElement('button');
+        b.className = 'answer';
+        
+        // Přísná kontrola shody indexu pro obarvení
+        if (q.correct === i) {
+            b.classList.add('selected');
+        }
+        
+        b.innerText = text;
+        
+        b.onclick = function() {
+            // Přiřazujeme přesné číslo indexu
+            questions[currentIndex].correct = i; 
+            console.log(`Ukládám pro otázku ${questions[currentIndex].id} odpověď index: ${i}`);
+            render(); 
+        };
+        container.appendChild(b);
+    });
+}
+
+function downloadJSON() {
+    // Před stažením vyčistíme JSON od případných duplicit nebo chyb
+    const cleanData = JSON.stringify(questions, null, 2);
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(cleanData);
+    const a = document.createElement('a');
+    a.href = dataStr; 
+    a.download = "PPL_otazky_opraveno.json"; 
+    a.click();
+}
+
+// Ostatní funkce (next, prev, keydown) zůstávají stejné...
+
+// Ovládání klávesnicí
+window.addEventListener('keydown', (e) => {
+    if (e.key >= 1 && e.key <= 4) selectAnswer(parseInt(e.key) - 1);
+    if (e.key === 'ArrowRight') nextQuestion();
+    if (e.key === 'ArrowLeft') prevQuestion();
+});
+
+function downloadJSON() {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(questions, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", "Letecky_zakon_final.json");
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+}
