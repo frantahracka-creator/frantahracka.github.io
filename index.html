@@ -3,111 +3,216 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PPL Exam Online</title>
+    <title>PPL Editor Otázek - Finální verze</title>
     <style>
-        :root { --p: #2196f3; --s: #4caf50; --bg: #f0f2f5; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; justify-content: center; padding: 20px; }
-        .container { background: white; max-width: 600px; width: 100%; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
-        .q-text { font-size: 1.2em; color: #1a237e; margin-bottom: 20px; font-weight: 600; }
-        .ans-btn { display: block; width: 100%; padding: 15px; margin: 10px 0; border: 2px solid #eee; border-radius: 10px; cursor: pointer; background: white; text-align: left; font-size: 1em; transition: 0.2s; }
-        .ans-btn:hover { border-color: var(--p); background: #f0f7ff; }
-        .ans-btn.correct { background: #e8f5e9; border-color: var(--s); color: #2e7d32; font-weight: bold; }
-        .ans-btn.wrong { background: #ffebee; border-color: #ef5350; color: #c62828; }
-        .controls { display: flex; justify-content: space-between; margin-top: 25px; }
-        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .btn-next { background: var(--p); color: white; }
-        .btn-next:hover { background: #1976d2; }
-        .hidden { display: none; }
+        :root {
+            --primary: #2196f3;
+            --success: #4caf50;
+            --bg: #f4f4f9;
+            --text: #333;
+        }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            max-width: 900px; 
+            margin: 0 auto; 
+            padding: 20px;
+            background-color: var(--bg);
+            color: var(--text);
+        }
+        .card { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08); 
+        }
+        #progress { 
+            font-size: 0.9em; 
+            color: #666; 
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        h2 { margin-top: 0; line-height: 1.4; color: #1a237e; }
+        .answer-container { margin: 25px 0; }
+        .answer { 
+            display: block; 
+            width: 100%; 
+            padding: 15px; 
+            margin: 10px 0; 
+            border: 2px solid #eee; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            text-align: left;
+            background: white;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+        .answer:hover { border-color: var(--primary); background: #f0f7ff; }
+        .answer.selected { 
+            border-color: var(--success); 
+            background: #e8f5e9; 
+            font-weight: bold;
+            box-shadow: inset 4px 0 0 var(--success);
+        }
+        .controls { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        button.nav-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            background: #e0e0e0;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button.nav-btn:hover { background: #d0d0d0; }
+        .download-btn {
+            padding: 12px 25px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .tip {
+            margin-top: 20px;
+            font-size: 0.85em;
+            color: #888;
+            text-align: center;
+        }
+        kbd {
+            background: #eee;
+            border-radius: 3px;
+            padding: 2px 6px;
+            border: 1px solid #ccc;
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div id="setup">
-        <h2>PPL Zkouškový Trenažér</h2>
-        <p>Vyber svůj upravený soubor <strong>questions.json</strong>:</p>
-        <input type="file" id="fileInput" accept=".json" style="margin-bottom: 20px;">
-        <p><small>Tento soubor jsi vytvořil v editoru a obsahuje správné odpovědi.</small></p>
-    </div>
-
-    <div id="quiz" class="hidden">
-        <div class="header">
-            <span id="stat">Otázka 1/X</span>
-            <span id="score">Skóre: 0</span>
-        </div>
-        <div id="qText" class="q-text">Text otázky</div>
-        <div id="ansBox"></div>
+    <div class="card">
+        <div id="progress">Načítám otázky...</div>
+        <h2 id="questionText">Prosím čekejte, načítám soubor questions.json</h2>
+        
+        <div id="answerOptions" class="answer-container">
+            </div>
+        
         <div class="controls">
-            <button class="btn" onclick="location.reload()">Zrušit</button>
-            <button id="nextBtn" class="btn btn-next hidden" onclick="nextQuestion()">Další otázka ➡</button>
+            <button class="nav-btn" onclick="prevQuestion()">⬅ PŘEDCHOZÍ</button>
+            <button class="download-btn" onclick="downloadJSON()">💾 STÁHNOUT JSON</button>
+            <button class="nav-btn" onclick="nextQuestion()">DALŠÍ ➡</button>
+        </div>
+
+        <div class="tip">
+            Klávesy <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd> pro výběr | <kbd>←</kbd> <kbd>→</kbd> pro pohyb
         </div>
     </div>
-</div>
 
-<script>
-    let questions = [];
-    let curIdx = 0;
-    let score = 0;
-    let answered = false;
+    <script>
+        let questions = [];
+        let currentIndex = 0;
 
-    document.getElementById('fileInput').addEventListener('change', function(e) {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            questions = JSON.parse(event.target.result).sort(() => Math.random() - 0.5); // Náhodné pořadí
-            document.getElementById('setup').classList.add('hidden');
-            document.getElementById('quiz').classList.remove('hidden');
-            showQuestion();
-        };
-        reader.readAsText(e.target.files[0]);
-    });
+        // 1. Načtení dat ze souboru
+        fetch('questions.json')
+            .then(res => {
+                if (!res.ok) throw new Error("Soubor questions.json nenalezen!");
+                return res.json();
+            })
+            .then(data => {
+                questions = data;
+                render();
+            })
+            .catch(err => {
+                document.getElementById('questionText').innerHTML = 
+                    "<span style='color:red'>Chyba: " + err.message + "</span><br><br>" +
+                    "Ujistěte se, že soubor 'questions.json' je ve stejné složce jako tento HTML soubor.";
+            });
 
-    function showQuestion() {
-        answered = false;
-        const q = questions[curIdx];
-        document.getElementById('nextBtn').classList.add('hidden');
-        document.getElementById('stat').innerText = `Otázka ${curIdx + 1}/${questions.length}`;
-        document.getElementById('qText').innerText = q.question;
-        
-        const box = document.getElementById('ansBox');
-        box.innerHTML = '';
-        
-        q.answers.forEach((text, i) => {
-            const b = document.createElement('button');
-            b.className = 'ans-btn';
-            b.innerText = text;
-            b.onclick = () => checkAns(i, q.correct, b);
-            box.appendChild(b);
+        // 2. Vykreslení otázky
+        function render() {
+            if (questions.length === 0) return;
+            const q = questions[currentIndex];
+            
+            // Aktualizace textů
+            document.getElementById('progress').innerText = `Otázka ${currentIndex + 1} z ${questions.length} (ID: ${q.id})`;
+            document.getElementById('questionText').innerText = q.question;
+            
+            const container = document.getElementById('answerOptions');
+            container.innerHTML = '';
+            
+            // Generování tlačítek odpovědí
+            q.answers.forEach((text, i) => {
+                const b = document.createElement('button');
+                b.className = 'answer';
+                if (q.correct === i) b.classList.add('selected');
+                
+                // Přidání textu odpovědi
+                b.innerText = text;
+                
+                // Logika kliknutí
+                b.onclick = () => {
+                    saveAnswer(i);
+                };
+                
+                container.appendChild(b);
+            });
+        }
+
+        // 3. Uložení odpovědi
+        function saveAnswer(index) {
+            questions[currentIndex].correct = index;
+            console.log(`Uloženo: Otázka ${questions[currentIndex].id}, Odpověď index ${index}`);
+            render();
+            // Automatický posun na další otázku pro rychlost (volitelné)
+            // setTimeout(nextQuestion, 200); 
+        }
+
+        // 4. Navigace
+        function nextQuestion() {
+            if (currentIndex < questions.length - 1) {
+                currentIndex++;
+                render();
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                render();
+                window.scrollTo(0, 0);
+            }
+        }
+
+        // 5. Klávesové zkratky
+        window.addEventListener('keydown', e => {
+            if (e.key >= '1' && e.key <= '9') {
+                const idx = parseInt(e.key) - 1;
+                if (questions[currentIndex] && idx < questions[currentIndex].answers.length) {
+                    saveAnswer(idx);
+                }
+            }
+            if (e.key === 'ArrowRight') nextQuestion();
+            if (e.key === 'ArrowLeft') prevQuestion();
         });
-    }
 
-    function checkAns(idx, correctIdx, btn) {
-        if (answered) return;
-        answered = true;
-        
-        const buttons = document.querySelectorAll('.ans-btn');
-        if (idx === correctIdx) {
-            btn.classList.add('correct');
-            score++;
-            document.getElementById('score').innerText = `Skóre: ${score}`;
-        } else {
-            btn.classList.add('wrong');
-            buttons[correctIdx].classList.add('correct');
+        // 6. Stažení upraveného souboru
+        function downloadJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(questions, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "Letecky_zakon_FINÁLNÍ.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+            alert("Soubor byl vygenerován a stažen.");
         }
-        
-        document.getElementById('nextBtn').classList.remove('hidden');
-    }
-
-    function nextQuestion() {
-        curIdx++;
-        if (curIdx < questions.length) {
-            showQuestion();
-        } else {
-            alert(`Test dokončen! Tvoje skóre je ${score} z ${questions.length}`);
-            location.reload();
-        }
-    }
-</script>
-
+    </script>
 </body>
 </html>
