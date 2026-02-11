@@ -3,45 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PPL trenažér</title>
+    <title>PPL trenažér - MIX</title>
     <style>
-        :root { --p: #2196f3; --s: #4caf50; --d: #f44336; --bg: #f8f9fa; --navy: #1a237e; }
+        :root { --p: #2196f3; --s: #4caf50; --d: #f44336; --bg: #f8f9fa; --navy: #1a237e; --gold: #ffd700; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; margin: 0; }
         .container { background: white; max-width: 700px; width: 100%; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         
-        /* Menu */
         h1 { text-align: center; color: var(--navy); }
         .menu { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
         .menu-btn { padding: 15px; border: 2px solid var(--p); background: white; color: var(--p); cursor: pointer; font-weight: bold; border-radius: 8px; transition: 0.2s; }
         .menu-btn:hover { background: var(--p); color: white; }
         
-        /* Progress & Stats */
+        /* Speciální tlačítko pro MIX */
+        .mix-btn { grid-column: span 2; background: var(--navy); color: white; border: 2px solid var(--navy); margin-top: 10px; font-size: 1.1em; }
+        .mix-btn:hover { background: #0d124a; border-color: #0d124a; transform: scale(1.02); }
+
         .stats-container { margin-bottom: 20px; }
         .stats-info { display: flex; justify-content: space-between; font-size: 0.9em; color: #666; margin-bottom: 8px; font-weight: bold; }
         .progress-bg { background: #eee; border-radius: 10px; height: 8px; width: 100%; overflow: hidden; }
         .progress-fill { background: var(--p); height: 100%; width: 0%; transition: width 0.3s ease; }
 
-        /* Skok na otázku */
-        .jump-panel { 
-            background: #f1f3f4; 
-            padding: 10px 15px; 
-            border-radius: 8px; 
-            margin-bottom: 15px; 
-            display: flex; 
-            gap: 10px; 
-            align-items: center;
-            border: 1px solid #ddd;
-            font-size: 0.9em;
-        }
+        .jump-panel { background: #f1f3f4; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; display: flex; gap: 10px; align-items: center; border: 1px solid #ddd; font-size: 0.9em; }
         .jump-input { width: 70px; padding: 6px; border: 1px solid #ccc; border-radius: 4px; text-align: center; }
         .jump-btn { padding: 6px 12px; cursor: pointer; background: #546e7a; color: white; border: none; border-radius: 4px; font-weight: bold; }
 
-        /* Obrázek */
         .q-image-container { width: 100%; text-align: center; margin-bottom: 20px; display: none; }
         .q-image-container.visible { display: block; }
         .q-image { max-width: 100%; max-height: 300px; border-radius: 8px; border: 1px solid #ddd; }
         
-        /* Otázky a odpovědi */
         .hidden { display: none; }
         .q-text { font-weight: bold; font-size: 1.2em; margin-bottom: 20px; color: var(--navy); line-height: 1.4; }
         .ans-btn { display: block; width: 100%; padding: 14px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; text-align: left; cursor: pointer; background: white; transition: 0.2s; font-size: 1em; }
@@ -49,25 +38,25 @@
         .correct { background: #e8f5e9 !important; border-color: var(--s) !important; color: #2e7d32; font-weight: bold; }
         .wrong { background: #ffebee !important; border-color: var(--d) !important; color: #c62828; }
         
-        /* Ovládání */
         .controls { margin-top: 25px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee; padding-top: 20px; gap: 10px; }
         .exit-btn { background: none; border: none; color: #888; cursor: pointer; text-decoration: underline; font-size: 0.9em; }
         .nav-buttons { display: flex; gap: 10px; }
         .back-btn { padding: 12px 20px; background: #eceff1; color: #455a64; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .next-btn { padding: 12px 25px; background: var(--p); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .next-btn:disabled { background: #ccc; cursor: not-allowed; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div id="home-screen">
-        <h1>PPL(A) Testové otázky</h1>
+        <h1>PPL(A) Trenažér</h1>
         <div class="menu">
             <button class="menu-btn" onclick="startQuiz('Letecke_predpisy')">1 Právní předpisy</button>
             <button class="menu-btn" onclick="startQuiz('Lidska_vykonnost')">2 Lidská výkonnost</button>
             <button class="menu-btn" onclick="startQuiz('Meteorologie')">3 Meteorologie</button>
             <button class="menu-btn" onclick="startQuiz('Navigace')">4 Navigace</button>
+            
+            <button class="menu-btn mix-btn" onclick="startMixQuiz()">Náhodný test (mix témat)</button>
         </div>
     </div>
 
@@ -109,8 +98,52 @@
     let questions = [];
     let curIdx = 0;
     let score = 0;
-    let answeredCount = 0; // Pomocná proměnná pro výpočet úspěšnosti
+    let answeredCount = 0;
     let currentSubject = "";
+
+    // Funkce pro náhodné zamíchání pole (Fisher-Yates)
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    // --- LOGIKA PRO MIX TEST ---
+    async function startMixQuiz() {
+        const subjects = ['Letecke_predpisy', 'Lidska_vykonnost', 'Meteorologie', 'Navigace'];
+        let mixQuestions = [];
+
+        try {
+            for (let sub of subjects) {
+                const res = await fetch(`./Klice/${sub}.json`);
+                const data = await res.json();
+                
+                // Přidáme k otázkám informaci, ze kterého jsou předmětu (pro obrázky)
+                const dataWithSubject = data.map(q => ({...q, subjectSource: sub}));
+                
+                // Zamícháme a vezmeme 12 náhodných
+                const shuffled = shuffle(dataWithSubject);
+                mixQuestions = mixQuestions.concat(shuffled.slice(0, 12));
+            }
+
+            // Celý mix ještě jednou náhodně zamícháme, aby nebyly předměty za sebou
+            questions = shuffle(mixQuestions);
+            
+            curIdx = 0;
+            score = 0;
+            answeredCount = 0;
+            currentSubject = "MIX"; // Indikátor pro obrázky
+
+            document.getElementById('home-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            showQuestion();
+        } catch (err) {
+            console.error(err);
+            alert("Chyba při generování MIXu. Ujistěte se, že máte všechny .json soubory v pořádku.");
+        }
+    }
 
     function startQuiz(subject) {
         currentSubject = subject;
@@ -121,14 +154,9 @@
                 curIdx = 0;
                 score = 0;
                 answeredCount = 0;
-                
                 document.getElementById('home-screen').classList.add('hidden');
                 document.getElementById('quiz-screen').classList.remove('hidden');
                 showQuestion();
-            })
-            .catch(err => {
-                console.error(err);
-                alert("Chyba při načítání. Zkontrolujte složku Klice/ a soubor " + subject + ".json");
             });
     }
 
@@ -136,19 +164,17 @@
         if (!questions[curIdx]) return;
         const q = questions[curIdx];
         
-        // Progress bar
-        const progressPercent = (curIdx / questions.length) * 100;
-        document.getElementById('progressBar').style.width = progressPercent + '%';
+        document.getElementById('progressBar').style.width = (curIdx / questions.length) * 100 + '%';
         document.getElementById('progress-text').innerText = `Otázka ${curIdx + 1} z ${questions.length} (ID: ${q.id})`;
-        
-        // Tlačítko zpět - schovat na první otázce
         document.getElementById('backBtn').style.visibility = (curIdx === 0) ? 'hidden' : 'visible';
 
-        // Obrázek
+        // Obrázek - bere se buď z aktuálního předmětu, nebo ze zdroje uloženého v MIXu
         const imgCont = document.getElementById('imgContainer');
         const imgTag = document.getElementById('questionImage');
+        const sourceFolder = q.subjectSource || currentSubject;
+
         if (q.image) {
-            imgTag.src = `./Obrazky/${currentSubject}/${q.image}`;
+            imgTag.src = `./Obrazky/${sourceFolder}/${q.image}`;
             imgCont.classList.add('visible');
         } else {
             imgCont.classList.remove('visible');
@@ -168,7 +194,6 @@
                 if (document.getElementById('nextBtn').classList.contains('hidden')) {
                     const btns = box.querySelectorAll('.ans-btn');
                     btns.forEach(btn => btn.disabled = true);
-                    
                     answeredCount++;
                     if (i === q.correct) {
                         b.classList.add('correct');
@@ -177,7 +202,6 @@
                         b.classList.add('wrong');
                         if(btns[q.correct]) btns[q.correct].classList.add('correct');
                     }
-                    
                     const successRate = Math.round((score / answeredCount) * 100);
                     document.getElementById('score-text').innerText = `Úspěšnost: ${successRate} %`;
                     document.getElementById('nextBtn').classList.remove('hidden');
@@ -190,21 +214,17 @@
     function jumpToId() {
         const idToFind = parseInt(document.getElementById('jumpInput').value);
         const foundIndex = questions.findIndex(q => q.id === idToFind);
-        
         if (foundIndex !== -1) {
             curIdx = foundIndex;
             showQuestion();
             document.getElementById('jumpInput').value = "";
         } else {
-            alert("Otázka s ID " + idToFind + " nenalezena.");
+            alert("Otázka s ID " + idToFind + " v aktuálním testu není.");
         }
     }
 
     function prevQuestion() {
-        if (curIdx > 0) {
-            curIdx--;
-            showQuestion();
-        }
+        if (curIdx > 0) { curIdx--; showQuestion(); }
     }
 
     function nextQuestion() {
@@ -212,7 +232,7 @@
         if (curIdx < questions.length) {
             showQuestion();
         } else {
-            alert(`Test dokončen!\nÚspěšnost: ${Math.round((score / questions.length) * 100)} %`);
+            alert(`MIX Test dokončen!\nÚspěšnost: ${Math.round((score / questions.length) * 100)} %`);
             location.reload();
         }
     }
