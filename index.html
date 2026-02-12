@@ -9,12 +9,33 @@
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; margin: 0; }
         .container { background: white; max-width: 700px; width: 100%; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         
-        h1 { text-align: center; color: var(--navy); }
-        .menu { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        h1 { text-align: center; color: var(--navy); margin-bottom: 10px; }
+        
+        /* Styl pro Toggle Switch */
+        .shuffle-control { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            gap: 10px; 
+            margin-bottom: 20px; 
+            background: #e3f2fd; 
+            padding: 10px; 
+            border-radius: 10px;
+            font-weight: bold;
+            color: var(--navy);
+        }
+
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--p); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        .menu { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
         .menu-btn { padding: 15px; border: 2px solid var(--p); background: white; color: var(--p); cursor: pointer; font-weight: bold; border-radius: 8px; transition: 0.2s; }
         .menu-btn:hover { background: var(--p); color: white; }
         
-        /* Speciální tlačítko pro MIX */
         .mix-btn { grid-column: span 2; background: var(--navy); color: white; border: 2px solid var(--navy); margin-top: 10px; font-size: 1.1em; }
         .mix-btn:hover { background: #0d124a; border-color: #0d124a; transform: scale(1.02); }
 
@@ -50,11 +71,21 @@
 <div class="container">
     <div id="home-screen">
         <h1>PPL(A) Trenažér</h1>
+        
+        <div class="shuffle-control">
+            <span>Náhodné pořadí otázek</span>
+            <label class="switch">
+                <input type="checkbox" id="shuffleToggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+
         <div class="menu">
             <button class="menu-btn" onclick="startQuiz('Letecke_predpisy')">1 Právní předpisy</button>
             <button class="menu-btn" onclick="startQuiz('Lidska_vykonnost')">2 Lidská výkonnost</button>
             <button class="menu-btn" onclick="startQuiz('Navigace')">4 Navigace</button>
-            
+            <button class="menu-btn" onclick="startQuiz('Letove_zasady')">5 Letové zásady</button>
+            <button class="menu-btn" onclick="startQuiz('Provozni_postupy')">6 Provozní postupy</button>
             <button class="menu-btn mix-btn" onclick="startMixQuiz()">Náhodný test (mix témat)</button>
         </div>
     </div>
@@ -100,7 +131,6 @@
     let answeredCount = 0;
     let currentSubject = "";
 
-    // Funkce pro náhodné zamíchání pole (Fisher-Yates)
     function shuffle(array) {
         for (let i = array.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -109,38 +139,22 @@
         return array;
     }
 
-    // --- LOGIKA PRO MIX TEST ---
     async function startMixQuiz() {
-        const subjects = ['Letecke_predpisy', 'Lidska_vykonnost', 'Navigace'];
+        const subjects = ['Letecke_predpisy', 'Lidska_vykonnost', 'Navigace', 'Letove_zasady', 'Provozni_postupy'];
         let mixQuestions = [];
-
         try {
             for (let sub of subjects) {
                 const res = await fetch(`./Klice/${sub}.json`);
                 const data = await res.json();
-                
-                // Přidáme k otázkám informaci, ze kterého jsou předmětu (pro obrázky)
                 const dataWithSubject = data.map(q => ({...q, subjectSource: sub}));
-                
-                // Zamícháme a vezmeme 12 náhodných
                 const shuffled = shuffle(dataWithSubject);
                 mixQuestions = mixQuestions.concat(shuffled.slice(0, 12));
             }
-
-            // Celý mix ještě jednou náhodně zamícháme, aby nebyly předměty za sebou
             questions = shuffle(mixQuestions);
-            
-            curIdx = 0;
-            score = 0;
-            answeredCount = 0;
-            currentSubject = "MIX"; // Indikátor pro obrázky
-
-            document.getElementById('home-screen').classList.add('hidden');
-            document.getElementById('quiz-screen').classList.remove('hidden');
-            showQuestion();
+            initQuiz("MIX");
         } catch (err) {
             console.error(err);
-            alert("Chyba při generování MIXu. Ujistěte se, že máte všechny .json soubory v pořádku.");
+            alert("Chyba při generování MIXu.");
         }
     }
 
@@ -149,14 +163,23 @@
         fetch(`./Klice/${subject}.json`)
             .then(res => res.json())
             .then(data => {
-                questions = data; 
-                curIdx = 0;
-                score = 0;
-                answeredCount = 0;
-                document.getElementById('home-screen').classList.add('hidden');
-                document.getElementById('quiz-screen').classList.remove('hidden');
-                showQuestion();
+                // TADY JE TA ZMĚNA: Pokud je toggle zapnutý, zamícháme to
+                const shouldShuffle = document.getElementById('shuffleToggle').checked;
+                questions = shouldShuffle ? shuffle(data) : data;
+                
+                initQuiz(subject);
             });
+    }
+
+    // Pomocná funkce pro spuštění rozhraní kvízu
+    function initQuiz(subject) {
+        curIdx = 0;
+        score = 0;
+        answeredCount = 0;
+        currentSubject = subject;
+        document.getElementById('home-screen').classList.add('hidden');
+        document.getElementById('quiz-screen').classList.remove('hidden');
+        showQuestion();
     }
 
     function showQuestion() {
@@ -167,7 +190,6 @@
         document.getElementById('progress-text').innerText = `Otázka ${curIdx + 1} z ${questions.length} (ID: ${q.id})`;
         document.getElementById('backBtn').style.visibility = (curIdx === 0) ? 'hidden' : 'visible';
 
-        // Obrázek - bere se buď z aktuálního předmětu, nebo ze zdroje uloženého v MIXu
         const imgCont = document.getElementById('imgContainer');
         const imgTag = document.getElementById('questionImage');
         const sourceFolder = q.subjectSource || currentSubject;
@@ -231,7 +253,7 @@
         if (curIdx < questions.length) {
             showQuestion();
         } else {
-            alert(`MIX Test dokončen!\nÚspěšnost: ${Math.round((score / questions.length) * 100)} %`);
+            alert(`Test dokončen!\nÚspěšnost: ${Math.round((score / questions.length) * 100)} %`);
             location.reload();
         }
     }
@@ -239,6 +261,3 @@
 
 </body>
 </html>
-
-
-
