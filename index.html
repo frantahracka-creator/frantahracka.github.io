@@ -1,266 +1,173 @@
 <!DOCTYPE html>
 <html lang="cs">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PPL trenažér - MIX</title>
-    <style>
-        :root { --p: #2196f3; --s: #4caf50; --d: #f44336; --bg: #f8f9fa; --navy: #1a237e; --gold: #ffd700; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; margin: 0; }
-        .container { background: white; max-width: 700px; width: 100%; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        
-        h1 { text-align: center; color: var(--navy); margin-bottom: 10px; }
-        
-        /* Styl pro Toggle Switch */
-        .shuffle-control { 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            gap: 10px; 
-            margin-bottom: 20px; 
-            background: #e3f2fd; 
-            padding: 10px; 
-            border-radius: 10px;
-            font-weight: bold;
-            color: var(--navy);
-        }
+    <title>PPL(A) Trenažér - Profesionální Příprava</title>
+    <meta name="description"
+        content="Moderní trenažér pro přípravu na zkoušky PPL(A). Testy z předpisů, meteorologie, navigace a dalších předmětů.">
 
-        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
-        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: var(--p); }
-        input:checked + .slider:before { transform: translateX(20px); }
-
-        .menu { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-        .menu-btn { padding: 15px; border: 2px solid var(--p); background: white; color: var(--p); cursor: pointer; font-weight: bold; border-radius: 8px; transition: 0.2s; }
-        .menu-btn:hover { background: var(--p); color: white; }
-        
-        .mix-btn { grid-column: span 2; background: var(--navy); color: white; border: 2px solid var(--navy); margin-top: 10px; font-size: 1.1em; }
-        .mix-btn:hover { background: #0d124a; border-color: #0d124a; transform: scale(1.02); }
-
-        .stats-container { margin-bottom: 20px; }
-        .stats-info { display: flex; justify-content: space-between; font-size: 0.9em; color: #666; margin-bottom: 8px; font-weight: bold; }
-        .progress-bg { background: #eee; border-radius: 10px; height: 8px; width: 100%; overflow: hidden; }
-        .progress-fill { background: var(--p); height: 100%; width: 0%; transition: width 0.3s ease; }
-
-        .jump-panel { background: #f1f3f4; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; display: flex; gap: 10px; align-items: center; border: 1px solid #ddd; font-size: 0.9em; }
-        .jump-input { width: 70px; padding: 6px; border: 1px solid #ccc; border-radius: 4px; text-align: center; }
-        .jump-btn { padding: 6px 12px; cursor: pointer; background: #546e7a; color: white; border: none; border-radius: 4px; font-weight: bold; }
-
-        .q-image-container { width: 100%; text-align: center; margin-bottom: 20px; display: none; }
-        .q-image-container.visible { display: block; }
-        .q-image { max-width: 100%; max-height: 300px; border-radius: 8px; border: 1px solid #ddd; }
-        
-        .hidden { display: none; }
-        .q-text { font-weight: bold; font-size: 1.2em; margin-bottom: 20px; color: var(--navy); line-height: 1.4; }
-        .ans-btn { display: block; width: 100%; padding: 14px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; text-align: left; cursor: pointer; background: white; transition: 0.2s; font-size: 1em; }
-        .ans-btn:hover:not(:disabled) { background: #f0f7ff; border-color: var(--p); }
-        .correct { background: #e8f5e9 !important; border-color: var(--s) !important; color: #2e7d32; font-weight: bold; }
-        .wrong { background: #ffebee !important; border-color: var(--d) !important; color: #c62828; }
-        
-        .controls { margin-top: 25px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee; padding-top: 20px; gap: 10px; }
-        .exit-btn { background: none; border: none; color: #888; cursor: pointer; text-decoration: underline; font-size: 0.9em; }
-        .nav-buttons { display: flex; gap: 10px; }
-        .back-btn { padding: 12px 20px; background: #eceff1; color: #455a64; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .next-btn { padding: 12px 25px; background: var(--p); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-    </style>
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
 
-<div class="container">
-    <div id="home-screen">
-        <h1>PPL(A) Trenažér</h1>
-        
-        <div class="shuffle-control">
-            <span>Náhodné pořadí otázek</span>
-            <label class="switch">
-                <input type="checkbox" id="shuffleToggle">
-                <span class="slider"></span>
-            </label>
+    <!-- Top Controls (Admin & Theme toggle) -->
+    <div class="top-controls fade-in">
+        <button id="themeToggleBtn" class="icon-btn" title="Přepnout vzhled" onclick="App.toggleTheme()">
+            <svg fill="currentColor" width="20" height="20" viewBox="0 0 24 24">
+                <path
+                    d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20V4Z" />
+            </svg>
+        </button>
+        <button id="adminBtn" class="icon-btn" title="Administrace" onclick="App.openAdmin()">
+            <svg fill="currentColor" width="20" height="20" viewBox="0 0 24 24">
+                <path
+                    d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z" />
+            </svg>
+        </button>
+    </div>
+
+    <div class="container fade-in">
+        <!-- Home Screen -->
+        <div id="home-screen">
+            <h1>PPL(A) Trenažér</h1>
+
+            <div class="shuffle-control">
+                <label>Náhodné pořadí otázek</label>
+                <label class="switch">
+                    <input type="checkbox" id="shuffleToggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div id="menu-container" class="menu">
+                <!-- Buttons generated via JS -->
+            </div>
         </div>
 
-        <div class="menu">
-            <button class="menu-btn" onclick="startQuiz('Letecke_predpisy')">1 Právní předpisy</button>
-            <button class="menu-btn" onclick="startQuiz('Lidska_vykonnost')">2 Lidská výkonnost</button>
-            <button class="menu-btn" onclick="startQuiz('Meteorologie')">3 Meteorologie</button> 
-            <button class="menu-btn" onclick="startQuiz('Navigace')">4 Navigace</button>
-            <button class="menu-btn" onclick="startQuiz('Letove_zasady')">5 Letové zásady</button>
-            <button class="menu-btn" onclick="startQuiz('Provozni_postupy')">6 Provozní postupy</button>
-            <button class="menu-btn mix-btn" onclick="startMixQuiz()">Náhodný test (mix témat)</button>
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="hidden">
+            <div class="jump-panel">
+                <input type="number" id="jumpInput" class="jump-input" placeholder="ID">
+                <button class="jump-btn" onclick="App.jumpToId()">GOTO</button>
+                <button class="category-shuffle-btn" onclick="App.reshuffleQuiz()" title="Zamíchat a restartovat test">
+                    <svg fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M10.59,9.17L5.41,4L4,5.41L9.17,10.58L10.59,9.17M14.5,4L16.54,6.04L4,18.59L5.41,20L17.96,7.46L20,9.5V4H14.5M14.83,13.41L13.42,14.82L16.59,18H15A1,1 0 0,0 14,19A1,1 0 0,0 15,20H18V17A1,1 0 0,0 17,16A1,1 0 0,0 16,17V17.59L14.83,13.41Z" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="stats-container">
+                <div class="stats-info">
+                    <span id="progress-text">Načítání...</span>
+                    <span id="score-text">Úspěšnost: 0 %</span>
+                </div>
+                <div class="progress-bg">
+                    <div id="progressBar" class="progress-fill"></div>
+                </div>
+            </div>
+
+            <div id="imgContainer" class="q-image-container">
+                <img id="questionImage" class="q-image" src="" alt="Obrázek k otázce">
+            </div>
+
+            <div id="qText" class="q-text"></div>
+            <div id="ansBox"></div>
+
+            <div id="hintContainer" class="hint-container hidden">
+                <button class="btn-hint" onclick="App.showHint()">
+                    <svg fill="currentColor" width="16" height="16" viewBox="0 0 24 24">
+                        <path
+                            d="M11,18H13V16H11V18M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,6A4,4 0 0,0 8,10H10A2,2 0 0,1 12,8A2,2 0 0,1 14,10C14,12 11,11.75 11,15H13C13,12.75 16,12.5 16,10A4,4 0 0,0 12,6Z" />
+                    </svg>
+                    Zobrazit nápovědu
+                </button>
+                <div id="hintText" class="hint-text hidden"></div>
+            </div>
+
+            <!-- AI Explanation Section -->
+            <div id="aiContainer" class="ai-container hidden">
+                <button id="aiExplainBtn" class="btn-ai" onclick="App.explainAnswerWithAI()">
+                    <svg fill="currentColor" width="16" height="16" viewBox="0 0 24 24">
+                        <path
+                            d="M12,20.93C11.66,20.9 11.36,20.73 11.16,20.47L9.34,18H7.5A2.5,2.5 0 0,1 5,15.5V5.5A2.5,2.5 0 0,1 7.5,3H16.5A2.5,2.5 0 0,1 19,5.5V15.5A2.5,2.5 0 0,1 16.5,18H14.66L12.84,20.47C12.6,20.79 12.2,20.97 11.8,20.93L12,20.93M7.5,5A0.5,0.5 0 0,0 7,5.5V15.5A0.5,0.5 0 0,0 7.5,16H9.72L12,19.08L14.28,16H16.5A0.5,0.5 0 0,0 17,15.5V5.5A0.5,0.5 0 0,0 16.5,5H7.5M9,13V11H15V13H9M9,9V7H15V9H9Z" />
+                    </svg>
+                    Zeptat se AI na vysvětlení chybné odpovědi ✨
+                </button>
+                <div id="aiExplanationBox" class="ai-explanation-box hidden">
+                    <!-- AI response will be injected here -->
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="exit-btn" onclick="location.reload()">✖ Ukončit test</button>
+                <div class="nav-buttons">
+                    <button id="backBtn" class="btn-secondary" onclick="App.prevQuestion()">Zpět</button>
+                    <button id="nextBtn" class="btn-primary hidden" onclick="App.nextQuestion()">Pokračovat</button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div id="quiz-screen" class="hidden">
-        <div class="jump-panel">
-            <span>Skočit na otázku číslo:</span>
-            <input type="number" id="jumpInput" class="jump-input" placeholder="ID">
-            <button class="jump-btn" onclick="jumpToId()">Přejít</button>
-        </div>
-
-        <div class="stats-container">
-            <div class="stats-info">
-                <span id="progress-text">Otázka 1 z X</span>
-                <span id="score-text">Úspěšnost: 0 %</span>
+    <!-- Admin Modal -->
+    <div id="adminModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Administrace Téma</h2>
+                <button class="close-btn" onclick="App.closeAdmin()">×</button>
             </div>
-            <div class="progress-bg">
-                <div id="progressBar" class="progress-fill"></div>
+            <div class="form-group">
+                <label for="newSubjectName">Název nového tématu</label>
+                <input type="text" id="newSubjectName" class="form-input" placeholder="např. Moje testy VFR">
             </div>
-        </div>
-
-        <div id="imgContainer" class="q-image-container">
-            <img id="questionImage" class="q-image" src="" alt="Obrázek k otázce">
-        </div>
-
-        <div id="qText" class="q-text"></div>
-        <div id="ansBox"></div>
-        
-        <div class="controls">
-            <button class="exit-btn" onclick="location.reload()">✖ Ukončit</button>
-            <div class="nav-buttons">
-                <button id="backBtn" class="back-btn" onclick="prevQuestion()">⬅ Zpět</button>
-                <button id="nextBtn" class="next-btn hidden" onclick="nextQuestion()">Další ➡</button>
+            <div class="form-group">
+                <label for="jsonFileUpload">Nahrát JSON soubor (stejný formát)</label>
+                <input type="file" id="jsonFileUpload" accept=".json" class="form-input">
             </div>
+            <div class="form-group">
+                <label for="activeModel">Aktivní AI Model</label>
+                <select id="activeModel" class="form-input">
+                    <option value="gemini">Google Gemini (Doporučeno)</option>
+                    <option value="gpt">OpenAI GPT-4o</option>
+                    <option value="claude">Anthropic Claude 3.5</option>
+                    <option value="mistral">Mistral Large</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="geminiApiKey">Gemini API Klíč</label>
+                <input type="password" id="geminiApiKey" class="form-input" placeholder="AIStudio API klíč">
+            </div>
+            <div class="form-group">
+                <label for="gptApiKey">OpenAI API Klíč</label>
+                <input type="password" id="gptApiKey" class="form-input" placeholder="sk-...">
+            </div>
+            <div class="form-group">
+                <label for="claudeApiKey">Anthropic API Klíč</label>
+                <input type="password" id="claudeApiKey" class="form-input" placeholder="sk-ant-...">
+            </div>
+            <div class="form-group">
+                <label for="mistralApiKey">Mistral API Klíč</label>
+                <input type="password" id="mistralApiKey" class="form-input" placeholder="Mistral API klíč">
+            </div>
+            <div class="form-info">
+                <small>
+                    Klíče se nikam neodesílá (vyjma přímé komunikace s daným poskytovatelem) a zůstávají ve vašem PC.
+                    Získáte je na stránkách <a href="https://aistudio.google.com/" target="_blank">Google</a>, 
+                    <a href="https://platform.openai.com/" target="_blank">OpenAI</a>, 
+                    <a href="https://console.anthropic.com/" target="_blank">Anthropic</a> nebo 
+                    <a href="https://console.mistral.ai/" target="_blank">Mistral</a>.
+                </small>
+            </div>
+            <button class="btn-primary full-width" onclick="App.handleFileUpload()">Uložit a přidat téma</button>
         </div>
     </div>
-</div>
 
-<script>
-    let questions = [];
-    let curIdx = 0;
-    let score = 0;
-    let answeredCount = 0;
-    let currentSubject = "";
-
-    function shuffle(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
-        }
-        return array;
-    }
-
-    async function startMixQuiz() {
-        const subjects = ['Letecke_predpisy', 'Lidska_vykonnost', 'Navigace', 'Letove_zasady', 'Provozni_postupy','Meteorologie'];
-        let mixQuestions = [];
-        try {
-            for (let sub of subjects) {
-                const res = await fetch(`./Klice/${sub}.json`);
-                const data = await res.json();
-                const dataWithSubject = data.map(q => ({...q, subjectSource: sub}));
-                const shuffled = shuffle(dataWithSubject);
-                mixQuestions = mixQuestions.concat(shuffled.slice(0, 12));
-            }
-            questions = shuffle(mixQuestions);
-            initQuiz("MIX");
-        } catch (err) {
-            console.error(err);
-            alert("Chyba při generování MIXu.");
-        }
-    }
-
-    function startQuiz(subject) {
-        currentSubject = subject;
-        fetch(`./Klice/${subject}.json`)
-            .then(res => res.json())
-            .then(data => {
-                // TADY JE TA ZMĚNA: Pokud je toggle zapnutý, zamícháme to
-                const shouldShuffle = document.getElementById('shuffleToggle').checked;
-                questions = shouldShuffle ? shuffle(data) : data;
-                
-                initQuiz(subject);
-            });
-    }
-
-    // Pomocná funkce pro spuštění rozhraní kvízu
-    function initQuiz(subject) {
-        curIdx = 0;
-        score = 0;
-        answeredCount = 0;
-        currentSubject = subject;
-        document.getElementById('home-screen').classList.add('hidden');
-        document.getElementById('quiz-screen').classList.remove('hidden');
-        showQuestion();
-    }
-
-    function showQuestion() {
-        if (!questions[curIdx]) return;
-        const q = questions[curIdx];
-        
-        document.getElementById('progressBar').style.width = (curIdx / questions.length) * 100 + '%';
-        document.getElementById('progress-text').innerText = `Otázka ${curIdx + 1} z ${questions.length} (ID: ${q.id})`;
-        document.getElementById('backBtn').style.visibility = (curIdx === 0) ? 'hidden' : 'visible';
-
-        const imgCont = document.getElementById('imgContainer');
-        const imgTag = document.getElementById('questionImage');
-        const sourceFolder = q.subjectSource || currentSubject;
-
-        if (q.image) {
-            imgTag.src = `./Obrazky/${sourceFolder}/${q.image}`;
-            imgCont.classList.add('visible');
-        } else {
-            imgCont.classList.remove('visible');
-        }
-
-        document.getElementById('qText').innerText = q.question;
-        document.getElementById('nextBtn').classList.add('hidden');
-        
-        const box = document.getElementById('ansBox');
-        box.innerHTML = '';
-        
-        q.answers.forEach((text, i) => {
-            const b = document.createElement('button');
-            b.className = 'ans-btn';
-            b.innerText = text;
-            b.onclick = () => {
-                if (document.getElementById('nextBtn').classList.contains('hidden')) {
-                    const btns = box.querySelectorAll('.ans-btn');
-                    btns.forEach(btn => btn.disabled = true);
-                    answeredCount++;
-                    if (i === q.correct) {
-                        b.classList.add('correct');
-                        score++;
-                    } else {
-                        b.classList.add('wrong');
-                        if(btns[q.correct]) btns[q.correct].classList.add('correct');
-                    }
-                    const successRate = Math.round((score / answeredCount) * 100);
-                    document.getElementById('score-text').innerText = `Úspěšnost: ${successRate} %`;
-                    document.getElementById('nextBtn').classList.remove('hidden');
-                }
-            };
-            box.appendChild(b);
-        });
-    }
-
-    function jumpToId() {
-        const idToFind = parseInt(document.getElementById('jumpInput').value);
-        const foundIndex = questions.findIndex(q => q.id === idToFind);
-        if (foundIndex !== -1) {
-            curIdx = foundIndex;
-            showQuestion();
-            document.getElementById('jumpInput').value = "";
-        } else {
-            alert("Otázka s ID " + idToFind + " v aktuálním testu není.");
-        }
-    }
-
-    function prevQuestion() {
-        if (curIdx > 0) { curIdx--; showQuestion(); }
-    }
-
-    function nextQuestion() {
-        curIdx++;
-        if (curIdx < questions.length) {
-            showQuestion();
-        } else {
-            alert(`Test dokončen!\nÚspěšnost: ${Math.round((score / questions.length) * 100)} %`);
-            location.reload();
-        }
-    }
-</script>
+    <!-- Scripts -->
+    <script src="js/app.js"></script>
 
 </body>
 
 </html>
-
